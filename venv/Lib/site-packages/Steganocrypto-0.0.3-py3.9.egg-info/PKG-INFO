@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: Steganocrypto
+Version: 0.0.3
+Summary: Python image steganography
+Home-page: https://github.com/gabrielhribeiro/Steganocrypto
+Author: Gabriel Ribeiro
+Author-email: gabrielrdavid@gmail.com
+License: GPL
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Environment :: Console
+Classifier: Topic :: Multimedia :: Graphics
+Classifier: Topic :: Utilities
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python
