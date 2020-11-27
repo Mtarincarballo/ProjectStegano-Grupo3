@@ -26,7 +26,7 @@ def op1():
     cv2.imshow('helloworld', img_data)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    print("instroduzca el mensaje de texto a ocultar: ")
+    print("Introduzca el mensaje de texto a ocultar: ")
     img_new, locs = encrypt(input(), 'original.png')
     img_data2 = cv2.imread('new.png')
     img1 = Image.open(r"original.png")
