@@ -57,20 +57,10 @@ def op1():
 #
 #print(op2('new.png', locs))
 
-
-<<<<<<< Updated upstream
-    return str_
-
-
-print(decrypt('new.png', locs))
-'''
-
 ## Pasar imagen a gris
 def pasarAgris():
-=======
 # FUNCIÓN PARA PASAR LA IMAGEN A ESCALA DE GRISES
 def op3():
->>>>>>> Stashed changes
     imagen = cv2.imread('proyimag1T.png')
     print("Convirtiendo la imagen a escala de grises...")
     img_engris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
@@ -79,11 +69,8 @@ def op3():
     cv2.imshow('Escala de grises', img_engris)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-<<<<<<< Updated upstream
-=======
 
 # AQUI EMPIEZA EL MENU
-
 def menu():
     print("Selecciona una opción")
     print("\t1 - [1] Insertar mensaje oculto en una imagen")
@@ -104,16 +91,10 @@ while opcion != 4:
     elif opcion == 3:
         print("Ha elegido: Convertir la imagen a escala de grises")
         op3()
-
-        '''SI EL USUARIO ELIGE (4) SE CIERRA EL BUCLE Y APARECE UN MENSAJE DE ERROR, VUELVE A APARECER EL MENU'''
+# SI EL USUARIO ELIGE (4) SE CIERRA EL BUCLE Y APARECE UN MENSAJE DE ERROR, VUELVE A APARECER EL MENU
     else:
         print("Opción no valida.")
     print()
     menu()
     opcion = int(input("Introduce la opción deseada: "))
-
 print("Gracias por usar nuestro programa. Adios.")
-
-
-
->>>>>>> Stashed changes
