@@ -57,8 +57,6 @@ def op1():
 #
 #print(op2('new.png', locs))
 
-## Pasar imagen a gris
-def pasarAgris():
 # FUNCIÓN PARA PASAR LA IMAGEN A ESCALA DE GRISES
 def op3():
     imagen = cv2.imread('proyimag1T.png')
