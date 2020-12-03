@@ -1,98 +1,181 @@
+# Importamos los módulos necesarios
+# Para este proyecto, como se puede ver hemos optado por la utilizacion de opencv
 import cv2
-from random import randint
-from PIL import Image
+import numpy as np
+import types
 
-# FUNCIÓN PARA INSERTAR MENSAJE OCULTO EN IMAGEN
-def op1():
-    print(" OPCIÓN: Insertar mensaje oculto en una imagen")
-    #Introducimos el alfabeto adaptado al teclado en español
-    alpha = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZabcdefghijklmnñopqrstuvwxyz0123456789~`!@#$%^&*()_+-=.,'*/ "
-    #Empezamos leyendo el archivo original
-    img_data = cv2.imread('original.png')
+# Esta es la función del menú principal, desde la que llamamos a las opciones mediante su respectiva función
+def menu_ppal():
 
-    def encrypt(mes, img):
-        num = []
-        locs = []
+    # El menú consta de un bucle que finalizará cuando se escoja la opción de salir
+    while True:
 
-        for i in mes:
-            num.append(alpha.index(i))
-        for i in range(len(num)):
-            locs.append((randint(0, len(img_data) - 1), randint(0, len(img_data[0]) - 1), randint(0, 2)))
-        for i, j in zip(locs, num):
-            img_data[i[0]][i[1]][i[2]] = j
+        print()
+        print(("\033[1m\033[4mAPLICACIÓN ESTEGANO\033[0m\033[0m".center(100, " ")), end = "\n\n")
 
-        return cv2.imwrite('new.png', img_data), locs
-    print("proyimag1T.png tiene de", img_data.shape[0], " de ancho y de", img_data.shape[1], "de alto")
-    print("Para salir de la ventana pulse una tecla o cierre manualmente")
-    cv2.imshow('helloworld', img_data)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    print("Introduzca el mensaje de texto a ocultar: ")
-    img_new, locs = encrypt(input(), 'original.png')
-    img_data2 = cv2.imread('new.png')
-    img1 = Image.open(r"original.png")
-    img2 = Image.open(r"new.png")
-    # using tobytes
-    img1.tobytes("hex", "rgb")
-    img2.tobytes("hex", "rgb")
-    if img1 == img2:
-        print("El fichero proyimag1T.png no es diferente a proyimod1T.png")
+        opc_insertada = input("1) Insertar mensaje oculto en una imagen \n2) Extraer mensaje oculto de una imagen \n3) Convertir la imagen a escala de grises \n4) Salir \n\nInserte opción: ")
+        opcion = int(opc_insertada)
+
+        if (opcion == 1):
+            print("\nOPCIÓN: Insertar mensaje oculto en una imagen\n")
+            insertar_msj()
+
+        elif (opcion == 2):
+            print("\nOPCIÓN: Extraer mensaje de una imagen\n")
+            print("Extrayendo el texto de la imagen...\n\n")
+            print("El texto oculto es: " + extraer_msj() + "\n")
+
+        elif (opcion == 3):
+            print("\nOPCIÓN: Convertir la imagen a escala de grises\n")
+            convertir_a_grises()
+            print("\nConvirtiendo la imagen a escala de grises...\n")
+
+        elif (opcion == 4):
+            salir()
+            break
+
+        else:
+            print("\nOpción no admitida, intente de nuevo...\n")
+
+# En esta opción pasamos el mensaje a binario. Será de utilidad en las funciones que ocultan y enseñan el mensaje
+def mensaje_a_binario(msj):
+
+    if type(msj) == str:
+        return ''.join([format(ord(i), "08b") for i in msj])
+
+    elif type(msj) == bytes or type(msj) == np.ndarray:
+        return [format(i, "08b") for i in msj]
+
+    elif type(msj) == int or type(msj) == np.uint8:
+        return format(msj, "08b")
+
+    # Añadimos un raise para controlar que el tipo de datos es correcto
     else:
-        print("El fichero proyimag1T.png es diferente a proyimod1T.png")
+        raise TypeError("Tipo de datos no soportado.")
 
-    print("Para salir de la ventana pulse una tecla o cierre manualmente")
-    cv2.imshow('helloworld', img_data2)
+# En esta función ocultamos el mensaje en la imagen (ambos parámetros de la función)
+def esconder_datos(img, msj_secreto):
+    
+    n_bytes = img.shape[0] * img.shape[1] * 3 // 8
+
+    # De la misma forma que hicimos antes, usamos de nuevo un raise por si el tamaño de la imagen no es suficiente como
+    # para ocultar el mensaje deseado
+    if len(msj_secreto) > n_bytes:
+        raise ValueError("No hay bytes suficientes. Es necesario una imagen mayor o un mensaje mas corto.")
+
+    msj_secreto += "#####"
+
+    indice = 0
+    msj_binario = mensaje_a_binario(msj_secreto)
+
+    data_len = len(msj_binario)
+    for valores in img:
+        for pixel in valores:
+            r, g, b = mensaje_a_binario(pixel)
+            if indice < data_len:
+                pixel[0] = int(r[:-1] + msj_binario[indice], 2)
+                indice += 1
+            if indice < data_len:
+                pixel[1] = int(g[:-1] + msj_binario[indice], 2)
+                indice += 1
+            if indice < data_len:
+                pixel[2] = int(b[:-1] + msj_binario[indice], 2)
+                indice += 1
+            if indice >= data_len:
+                break
+
+    return img
+
+# Esta función devuelve los decodifica y devuelve el mensaje
+def enseñar_datos(img):
+    datos_binarios = ""
+    for valores in img:
+        for pixel in valores:
+            r, g, b = mensaje_a_binario(pixel)
+            datos_binarios += r[-1]
+            datos_binarios += g[-1]
+            datos_binarios += b[-1]
+    
+    datos_en_bytes = [datos_binarios[i: i + 8] for i in range(0, len(datos_binarios), 8)]
+    decodificado = ""
+
+    for byte in datos_en_bytes:
+        decodificado += chr(int(byte, 2))
+        
+        if decodificado[-5:] == "#####":
+            break
+
+    return decodificado[:-5]
+
+# En esta función insertamos el mensaje que queremos ocultar en la imagen (y mostramos la misma)
+def insertar_msj():
+
+    nombre_imagen = "proyimag1T.png"
+
+    imagen = cv2.imread(".\proyimag1T.png")
+    tamaño = imagen.shape
+    alto = tamaño[0]
+    ancho = tamaño[1]
+
+    print(f"{nombre_imagen} tiene de {ancho} de ancho y de {alto} de alto.")
+
+    cv2.imshow('Imagen original', imagen)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-# FUNCIÓN PARA EXTRAER MENSAJE OCULTO DE UNA IMAGEN
-#def op2(img, locs):
-#    img_data = cv2.imread(img, 1)
-#    str_ = ""
-#    for i in locs:
-#        str_ += alpha[img_data[i[0]][i[1]][i[2]]]
-#
-#   return str_
-#
-#
-#print(op2('new.png', locs))
-
-# FUNCIÓN PARA PASAR LA IMAGEN A ESCALA DE GRISES
-def op3():
-    imagen = cv2.imread('proyimag1T.png')
-    print("Convirtiendo la imagen a escala de grises...")
-    img_engris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-    img_engris = cv2.cvtColor(img_engris, cv2.COLOR_GRAY2RGB)
-    cv2.imwrite('proyimag1T_gris.png',img_engris)
-    cv2.imshow('Escala de grises', img_engris)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-# AQUI EMPIEZA EL MENU
-def menu():
-    print("Selecciona una opción")
-    print("\t1 - [1] Insertar mensaje oculto en una imagen")
-    print("\t2 - [2] Extraer mensaje oculto de una imagen")
-    print("\t3 - [3] Convertir la imagen a escala de grises")
-    print("\t4 - [4] Salir")
-
-menu()
-opcion = int(input("Introduce la opción deseada: "))
-
-while opcion != 4:
-    if opcion == 1:
-        print("Ha elegido: Insertar mensaje oculto en una imagen")
-        op1()
-    elif opcion == 2:
-        print("Ha elegido: Extraer mensaje oculto de una imagen")
-        op2()
-    elif opcion == 3:
-        print("Ha elegido: Convertir la imagen a escala de grises")
-        op3()
-# SI EL USUARIO ELIGE (4) SE CIERRA EL BUCLE Y APARECE UN MENSAJE DE ERROR, VUELVE A APARECER EL MENU
-    else:
-        print("Opción no valida.")
     print()
-    menu()
-    opcion = int(input("Introduce la opción deseada: "))
-print("Gracias por usar nuestro programa. Adios.")
+
+    msj_a_ocultar = input("Introduzca el mensaje de texto a ocultar: ")
+
+    # De nuevo, usamos raise para notificar que no se ha introducido mensaje alguno
+    if (len(msj_a_ocultar) == 0):
+        raise ValueError('No ha introducido ningún mensaje.')
+    print()
+
+    nombre_archivo = "proyimod1T.png"
+    imagen_encodeada = esconder_datos(imagen, msj_a_ocultar)
+    cv2.imwrite(nombre_archivo, imagen_encodeada)
+
+    print("Insertando texto en la imagen...\n")
+    print(f"El fichero {nombre_imagen} es diferente a {nombre_archivo}\n")
+
+    imagen2 = cv2.imread(".\proyimod1T.png")
+    cv2.imshow('Con texto oculto', imagen2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# En esta funcion extraemos el mensaje
+def extraer_msj():
+
+    archivo_nombre = "proyimod1T.png"
+    datos_imagen = cv2.imread(archivo_nombre, 1)
+
+    print("El fichero de la imagen con texto oculto se llama: " + archivo_nombre + "\n")
+
+    datos_a_mostrar = enseñar_datos(datos_imagen)
+    
+    return datos_a_mostrar
+
+# Esta es la función que usamos para convertir la imagen a una imagen en escala de grises y la mostramos
+def convertir_a_grises():
+
+    archivo_nombre = 'proyimag1T.png'
+    print("El fichero de la imagen se llama: " + archivo_nombre)
+    print("Convirtiendo la imagen a escala de grises...")
+
+    imagen = cv2.imread(archivo_nombre)
+    imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    imagen_gris = cv2.cvtColor(imagen_gris, cv2.COLOR_GRAY2RGB)
+
+    cv2.imwrite('proyimgr1T.png',imagen_gris)
+    cv2.imshow('Escala de grises', imagen_gris)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+# Finalmente, la opción de salir simplemente imprime un mensaje de finalización (cuando la llamamos desde el menú se cierra el bucle y por tanto finaliza el programa)
+def salir():
+    print("Opción de SALIR\n")
+    print("FIN DEL PROGRAMA")
+
+menu_ppal()
